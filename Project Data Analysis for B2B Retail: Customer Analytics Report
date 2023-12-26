@@ -1,0 +1,112 @@
+# BAGAIMANA PERTUMBUHAN PENJUALAN SAAT INI 
+
+# Total Penjualan dan Revenue pada Quarter-1 (Jan, Feb, Mar) dan Quarter-2 (Apr,Mei,Jun) 🚀
+SELECT 
+	SUM(quantity) AS total_penjualan, 
+	SUM(quantity * priceeach) AS revenue 
+FROM orders_1;
+SELECT 
+	SUM(quantity) AS total_penjualan, 
+	SUM(quantity * priceeach) AS revenue 
+FROM orders_2 
+WHERE status = 'Shipped';
+
+
+
+# Menghitung persentasi keseluruhan penjualan 🚀
+SELECT
+	quarter,
+	SUM(quantity) AS total_penjualan,
+	SUM(quantity * priceeach) AS revenue
+FROM
+	(SELECT
+		orderNumber,
+		status,
+		quantity,
+		priceeach,
+		'1' AS quarter
+	FROM
+		orders_1 
+	WHERE 
+		 status = 'Shipped'
+	UNION
+	SELECT
+		orderNumber,
+		status,
+		quantity,
+		priceeach,
+		'2' AS quarter
+	FROM
+		orders_2 
+	WHERE 
+	 	status = 'Shipped'
+	) AS tabel_a
+GROUP BY quarter;
+
+
+
+
+# CUSTOMERS ANALYSTICS 
+
+# Apakah jumlah customers xyz.com semakin bertambah? 🚀
+SELECT 
+	quarter(createdate) AS quarter,
+	COUNT(DISTINCT customerid) AS total_customers 
+FROM
+	(SELECT 
+	 	customerid,
+		createdate,
+		quarter(createdate) AS quarter
+	FROM 
+		customer
+	WHERE
+		createdate 
+	BETWEEN '2004-01-01' AND '2004-06-30') AS tabel_b
+GROUP BY quarter(createdate);
+
+
+
+# Seberapa banyak customers tersebut yang sudah melakukan transaksi? 🚀
+SELECT quarter(createdate) AS quarter,
+COUNT(DISTINCT customerid) AS total_customers
+FROM
+(SELECT customerid,createdate,quarter(createdate) AS quarter 
+ FROM customer 
+ WHERE createdate BETWEEN '2004-01-01' AND '2004-06-30' AND customerid IN
+ (SELECT DISTINCT customerid 
+  FROM orders_1
+UNION
+SELECT DISTINCT customerid 
+  FROM orders_2)) AS tabel_b
+GROUP BY quarter(createdate);
+
+
+
+# Category produk apa saja yang paling banyak di-order oleh customers di Quarter-2? 🚀
+SELECT LEFT(productcode, 3) AS categoryid, 
+COUNT(DISTINCT ordernumber) AS total_order, 
+SUM(quantity) AS total_penjualan FROM 
+(SELECT productcode, ordernumber, quantity, status, 
+ LEFT(productcode, 3) AS categoryid 
+ FROM orders_2 
+ WHERE status = "Shipped") tabel_c
+GROUP BY LEFT(productcode, 3)
+ORDER BY COUNT(DISTINCT ordernumber)DESC;
+
+
+
+# Seberapa banyak customers yang tetap aktif bertransaksi setelah transaksi pertamanya? 🚀
+#Menghitung total unik customers yang transaksi di quarter_1
+SELECT 
+COUNT(DISTINCT customerID) AS total_customers 
+FROM orders_1;
+#output = 25
+SELECT "1" AS quarter, 
+(COUNT(DISTINCT customerID)*100)/25 AS Q2
+FROM orders_1 
+WHERE customerid IN 
+(SELECT DISTINCT customerID 
+ FROM orders_2);
+
+
+
